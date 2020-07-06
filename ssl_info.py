@@ -98,9 +98,10 @@ def get_domain_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0)
 @click.option('--port', '-p', help='Port to connect to.', type=int, default=443)
 @click.option('--field', '-f', help='SSL Info field', type=str, default='')
 @click.option('--timestamp', '-t', help='Return date in timestamp format (notBefore, notAfter)', is_flag=True, default=False)
+@click.option('--timestamp-delta', '-td', help='Return date in timestamp format (notBefore, notAfter)', is_flag=True, default=False)
 @click.option('--verbose', '-v', help='Be verbose', is_flag=True, default=False)
 @click.option('--debug', '-d', help='Debug messages.', is_flag=True, default=False)
-def show_ssl_info(hostlist, servername, port, field, timestamp, verbose, debug):
+def show_ssl_info(hostlist, servername, port, field, timestamp, timestamp_delta, verbose, debug):
     """
     print ssl info to output
     :hostlist: host list string
@@ -130,6 +131,8 @@ def show_ssl_info(hostlist, servername, port, field, timestamp, verbose, debug):
 
                 if timestamp:
                     result = date.strftime('%s')
+                elif timestamp_delta:
+                    result = (date - datetime.datetime.now()).seconds
                 else:
                     result = date.strftime('%Y-%m-%d %H:%M:%S')
 
