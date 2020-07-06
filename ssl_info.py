@@ -137,7 +137,7 @@ def show_ssl_info(hostlist, servername, port, field, timestamp, timestamp_delta,
                 if timestamp:
                     result = date.strftime('%s')
                 elif timestamp_delta:
-                    result = (date - datetime.datetime.now()).total_seconds()
+                    result = int((date - datetime.datetime.now()).total_seconds())
                 else:
                     result = date.strftime('%Y-%m-%d %H:%M:%S')
 
