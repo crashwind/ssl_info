@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 import socket
 import ssl
 import datetime
@@ -15,10 +16,15 @@ def parse_ssl_dns(ssl_info):
     return map(lambda x: x[1], ssl_info['subjectAltName'])
 
 
-def parse_ssl_expiry_date(ssl_info):
+def parse_date(data):
+    """
+    :data:      date in human-readable format
+    :return:    formatted date
+    """
+
     ssl_date_fmt = r'%b %d %H:%M:%S %Y %Z'
     # parse the string from the certificate into a Python datetime object
-    return datetime.datetime.strptime(ssl_info['notAfter'], ssl_date_fmt)
+    return datetime.datetime.strptime(data, ssl_date_fmt)
 
 
 def get_ssl_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0):
@@ -70,7 +76,7 @@ def get_domain_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0)
             msg = '{h}: {e}'.format(h=hostname, e=ssl_info)
             click.echo(click.style(msg, fg='red'), err=True)
         else:
-            expiry_date = parse_ssl_expiry_date(ssl_info)
+            expiry_date = parse_date(ssl_info['notAfter'])
             cert_dns = parse_ssl_dns(ssl_info)
 
     return (
@@ -83,7 +89,10 @@ def get_domain_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0)
 @click.argument('hostlist', type=str, nargs=-1)
 @click.option('--servername', '-s', help='Servername (virtual host) to check.', type=str)
 @click.option('--port', '-p', help='Port to connect to.', type=int, default=443)
-def show_ssl_info(hostlist, servername, port):
+@click.option('--field', '-f', help='SSL Info field', type=str, default='')
+@click.option('--timestamp', '-t', help='Return date in timestamp format (notBefore, notAfter)', is_flag=True, default=False)
+@click.option('--verbose', '-v', help='Be verbose', is_flag=True, default=False)
+def show_ssl_info(hostlist, servername, port, field, timestamp, verbose=False):
     """
     print ssl info to output
     :hostlist: host list string
@@ -91,13 +100,32 @@ def show_ssl_info(hostlist, servername, port):
     """
 
     for host in hostlist:
-        click.echo('[.] hostname: {}'.format(servername or host))
-        pprint(
-            get_ssl_info(host, servername or host, ipv6=True, port=port, timeout=1.0)
-        )
-#        click.echo(
-#            get_ssl_info(host, servername or host, ipv6=True, port=port, timeout=1.0)
-#        )
+        if verbose:
+            click.echo('[.] hostname: {}'.format(servername or host))
+
+        ssl_info = get_ssl_info(host, servername or host, ipv6=True, port=port, timeout=1.0)
+
+        if len(field):
+            if field in ['notBefore', 'notAfter']:
+                # format date
+                date = parse_date(ssl_info.get(field, ''))
+
+                if timestamp:
+                    result = date.strftime('%s')
+                else:
+                    result = date.strftime('%Y-%m-%d %H:%M:%S')
+
+                print(result)
+
+            else:
+                # pretty print field data
+                pprint(ssl_info.get(field, ''))
+
+        else:
+            # pretty print all data
+            pprint(
+                get_ssl_info(host, servername or host, ipv6=True, port=port, timeout=1.0)
+            )
 
 
 @cli.command('check-cert')
