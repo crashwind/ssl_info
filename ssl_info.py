@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 import socket
@@ -50,8 +50,15 @@ def get_ssl_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0):
     try:
         conn.connect((hostname, port))
         ssl_info = conn.getpeercert()
+
+        logging.debug('ssl_info: {}'.format(ssl_info))
     except Exception as e:
-        return e
+        logging.debug('hostname: {}'.format(hostname))
+        logging.debug('server_hostname: {}'.format(server_hostname))
+        logging.debug('ipv6: {}'.format(ipv6))
+        logging.debug('port: {}'.format(port))
+        logging.debug('timeout: {}'.format(timeout))
+        raise(e)
 
     return ssl_info
 
@@ -92,18 +99,29 @@ def get_domain_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0)
 @click.option('--field', '-f', help='SSL Info field', type=str, default='')
 @click.option('--timestamp', '-t', help='Return date in timestamp format (notBefore, notAfter)', is_flag=True, default=False)
 @click.option('--verbose', '-v', help='Be verbose', is_flag=True, default=False)
-def show_ssl_info(hostlist, servername, port, field, timestamp, verbose=False):
+@click.option('--debug', '-d', help='Debug messages.', is_flag=True, default=False)
+def show_ssl_info(hostlist, servername, port, field, timestamp, verbose, debug):
     """
     print ssl info to output
     :hostlist: host list string
     :servername: virtual host
     """
 
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+        print('[D] DEBUG MODE')
+
     for host in hostlist:
         if verbose:
             click.echo('[.] hostname: {}'.format(servername or host))
 
         ssl_info = get_ssl_info(host, servername or host, ipv6=True, port=port, timeout=1.0)
+        try:
+            if not ssl_info.get('issuer', False):
+                print('[.] failed to get ssl info: {}'.format(ssl_info))
+        except Exception as e:
+            logging.error('failed to get ssl info: {}'.format(e))
+            return
 
         if len(field):
             if field in ['notBefore', 'notAfter']:

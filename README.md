@@ -16,6 +16,15 @@ $ python ssl_info.py show-ssl-info www.google.ru
                     ('DNS', 'google.com.ru'),
                     ('DNS', 'google.ru')),
 ...
+
+$ ./ssl_info.py  show-ssl-info 209.85.233.103 -s www.google.ru -f notAfter
+2020-09-09 14:33:54
+
+$ ./ssl_info.py  show-ssl-info 209.85.233.103 -s www.google.com -f notAfter
+2020-09-09 14:31:22
+
+$ ./ssl_info.py  show-ssl-info 209.85.233.103 -s www.google.com -f notAfter -t
+1599651082
 ```
 
 ## check certificate expiry date
