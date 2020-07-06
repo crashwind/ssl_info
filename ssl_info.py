@@ -27,7 +27,7 @@ def parse_date(data):
     return datetime.datetime.strptime(data, ssl_date_fmt)
 
 
-def get_ssl_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0):
+def get_ssl_info(hostname, server_hostname, ipv6=False, port=443, timeout=3.0):
     """
     :hostname: host to connect to
     :server_hostname: servername ('Host' header)
@@ -63,7 +63,7 @@ def get_ssl_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0):
     return ssl_info
 
 
-def get_domain_info(hostname, server_hostname, ipv6=True, port=443, timeout=3.0):
+def get_domain_info(hostname, server_hostname, ipv6=False, port=443, timeout=3.0):
     """
     return datetime of expiry date
     return example: datetime.datetime(2019, 8, 13, 14, 46, 22)
@@ -116,7 +116,12 @@ def show_ssl_info(hostlist, servername, port, field, timestamp, timestamp_delta,
         if verbose:
             click.echo('[.] hostname: {}'.format(servername or host))
 
-        ssl_info = get_ssl_info(host, servername or host, ipv6=True, port=port, timeout=1.0)
+        if ':' in host:
+            ipv6 = True
+        else:
+            ipv6 = False
+
+        ssl_info = get_ssl_info(host, servername or host, ipv6=ipv6, port=port, timeout=1.0)
         try:
             if not ssl_info.get('issuer', False):
                 print('[.] failed to get ssl info: {}'.format(ssl_info))
@@ -145,7 +150,7 @@ def show_ssl_info(hostlist, servername, port, field, timestamp, timestamp_delta,
         else:
             # pretty print all data
             pprint(
-                get_ssl_info(host, servername or host, ipv6=True, port=port, timeout=1.0)
+                get_ssl_info(host, servername or host, ipv6=ipv6, port=port, timeout=1.0)
             )
 
 
